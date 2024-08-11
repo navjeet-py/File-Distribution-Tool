@@ -1,6 +1,6 @@
 # File-Distribution-Tool
 
-A Python-based file distribution tool designed for efficient file transfer and communication between clients and a server.
+A Python-based file distribution tool designed for efficient and secure file transfer and communication between clients and a server.
 
 ### How to run
 1. Clone or download the repository
