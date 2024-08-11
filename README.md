@@ -26,10 +26,7 @@ A Python-based file distribution tool designed for efficient file transfer and c
    cd client
    python3 client.py
    ```
-ADMIN_COMMANDS = ['init', 'create-group', 'delete-group', 'list-users', 'view-requests', 'add', 'remove']
-GENERAL_COMMANDS = ['list-groups', 'join-group', 'received-file', 'my-groups']
-
-
+   
 
 ### Commands to communicate
 #### General Commands (Any user can make)
