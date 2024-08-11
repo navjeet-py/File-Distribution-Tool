@@ -4,7 +4,7 @@ A Python-based file distribution tool designed for efficient and secure file tra
 
 ### How to run
 1. Clone or download the repository
-2. Ensure we have Python3 installed. Create and activate a virtual environment inside the project directory. Install the required packages listed in `r.txt`.
+2. Ensure you have Python3 installed. Create and activate a virtual environment inside the project directory. Install the required packages listed in `r.txt`.
     ```
     cd project_directory
     virtualenv venv
