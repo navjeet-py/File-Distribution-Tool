@@ -48,7 +48,7 @@ A Python-based file distribution tool designed for efficient and secure file tra
 
 ### Authentication (If using dummy data)
 1. We have generated an admin with 'admin' as both email and password.
-2. Also, we generated 10 users with email as user1@gmail.com, user2@gmail.com, etc. And their respective passwords are user1, user2, etc.
+2. Also, we generated 10 users with their emails as user1@gmail.com, user2@gmail.com, etc. And their respective passwords are user1, user2, etc.
 3. We also have 5 groups with names group1, group2, and so on. 2 users are assigned to each group.
 
 
