@@ -1,0 +1,10 @@
+antiorm==1.2.1
+bcrypt==4.2.0
+cffi==1.17.0
+cryptography==43.0.0
+db==0.1.1
+db-sqlite3==0.0.1
+pycparser==2.22
+pycrypto==2.6.1
+pycryptodome==3.20.0
+tqdm==4.66.5
