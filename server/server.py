@@ -3,10 +3,14 @@ import threading
 import logging
 import os
 import concurrent.futures
+from time import sleep
 
 from db import Database
 from utils import encrypt_file, parse_request, numerize_list
-from constants import PORT, SERVER, ADDR, FORMAT, MAX_CONCURRENT_TRANSFERS
+from constants import PORT, SERVER, ADDR, FORMAT, MAX_CONCURRENT_TRANSFERS, CHUNK_SIZE
+
+import zipfile
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -16,7 +20,6 @@ server.bind(ADDR)
 
 online = {}
 
-futures = []
 executor = concurrent.futures.ThreadPoolExecutor(MAX_CONCURRENT_TRANSFERS)
 
 
@@ -25,6 +28,7 @@ def apply_pending_files(conn, user):
         logging.info(f"[CHECKING PENDING FILES FOR {user['email']}]")
         pending_files = database.get_pending_filenames(user['email'])
         for filename in pending_files:
+            sleep(0.5)
             send_file_to_client(conn, filename, user)
     except:
         return
@@ -36,23 +40,25 @@ def remove_connection(email):
         return True
 
 
+
 def send_file_to_client(conn, filename, user):
     try:
         logging.info(f"[SENDING {filename} TO {user['email']}]")
-        try:
-            file = open(filename, 'rb')
-            data = file.read()
-            file.close()
-        except:
-            return
         file_size = os.path.getsize(filename)
+        # sleep(0.5)
         conn.send(f"file {filename} -size {str(file_size)}".encode(FORMAT))
-        encrypted = encrypt_file(data, user['key'])
-        conn.sendall(encrypted)
-        conn.send(b'<END>')
+        with open(filename, 'rb') as file:
+            while True:
+                chunk = file.read(CHUNK_SIZE)
+                if not chunk:
+                    conn.sendall(b'<END>')
+                    break
+                encrypted_chunk = encrypt_file(chunk, user['key'])
+                conn.sendall(encrypted_chunk)
     except:
         logging.error(f"[ERROR SENDING {filename} to {user['email']}]")
         return
+
 
 
 def handle_admin_request(request, conn, sender):
@@ -118,8 +124,7 @@ def handle_admin_request(request, conn, sender):
         for email in emails:
             if email in online:
                 user = online[email]
-                future = executor.submit(send_file_to_client, user['conn'], filename, user['user'])
-                futures.append(future)
+                executor.submit(send_file_to_client, user['conn'], filename, user['user'])
 
         conn.send(f"Initiated {filename} to {', '.join(groups)}".encode(FORMAT))
 
@@ -190,13 +195,13 @@ def handle_client(conn, addr):
         else:
             online[email] = {'conn': conn, 'user': user}
             conn.sendall(b'Connection Established.')
+            executor.submit(apply_pending_files, conn, user)
 
-            thread = threading.Thread(target=apply_pending_files, args=(conn, user))
-            thread.start()
 
         while True:
             client_message = conn.recv(1024).decode(FORMAT)
             if not client_message:
+                remove_connection(email)
                 conn.close()
                 return
 
@@ -215,8 +220,7 @@ def handle_client(conn, addr):
                 handle_regular_request(parsed, conn, user)
     except:
         conn.sendall(b"Invalid Request!")
-        if user["email"] in online:
-            del online[user["email"]]
+        remove_connection(user['email'])
         conn.close()
         return
 

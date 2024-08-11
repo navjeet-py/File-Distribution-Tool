@@ -47,22 +47,29 @@ def receive_messages():
             filesize = int(message[3])
             print(f"[PREPARING TO RECEIVE FILE: {filename}\n")
 
-            file_bytes = b""
+            file_bytes = bytearray()
             progress = tqdm.tqdm(unit='B', unit_scale=True, unit_divisor=True, total=filesize)
             done = False
 
+            length = 0
+
             while not done:
                 data = client_socket.recv(CHUNK_SIZE)
-                file_bytes += data
-                progress.update(len(data))
-                if b'<END>' in file_bytes:
-                    done = True
-                    remaining_bytes = filesize - len(file_bytes) + len(b'<END>')
+                if b'<END>' in data:
+                    end_marker_index = data.index(b'<END>')
+                    file_bytes.extend(decrypt_file(data[:end_marker_index], key))
+                    file = open(filename, 'wb')
+                    file.write(file_bytes)
+                    file.close()
+                    remaining_bytes = filesize - length + len(b'<END>')
                     progress.update(remaining_bytes)
+                    break
+
+                file_bytes.extend(decrypt_file(data, key))
+                length += len(data)
+                progress.update(len(data))
             progress.close()
             print('\n')
-            file = open(filename, 'wb')
-            file.write(decrypt_file(file_bytes[:-5], key))
             file.close()
             print(f"[FILE {filename} RECEIVED SUCCESSFULLY]\n")
             client_socket.send(f"received-file {filename}".encode(FORMAT))
